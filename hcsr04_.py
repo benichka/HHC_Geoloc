@@ -1,7 +1,10 @@
+#!/usr/bin/python
+
 import RPi.GPIO as GPIO
 import time
 import requests
 import json
+import os
 
 GPIO.cleanup()
 
@@ -48,6 +51,9 @@ while(1):
     # print '--front'
     while GPIO.input(echo_front)==1:
         end_impulse_front = time.time()
+        if end_impulse_front > (400 / 17000) + start_impulse_front:
+            end_impulse_front = (400 / 17000) + start_impulse_front
+            break
 
     time.sleep(0.01)
     GPIO.output(trig_left, True)
@@ -61,7 +67,10 @@ while(1):
     # print '--left'
     while GPIO.input(echo_left)==1:
         end_impulse_left = time.time()
-    
+        if end_impulse_left > (400 / 17000) + start_impulse_left:
+            end_impulse_left = (400 / 17000) + start_impulse_left
+            break
+
     time.sleep(0.01)
     GPIO.output(trig_right, True)
     time.sleep(0.00001)
@@ -74,6 +83,9 @@ while(1):
     # print '--right'
     while GPIO.input(echo_right)==1:
         end_impulse_right = time.time()
+        if end_impulse_right > (400 / 17000) + start_impulse_right:
+            end_impulse_right = (400 / 17000) + start_impulse_right
+            break
 
     # print 'end of while blocks'
 
@@ -126,3 +138,6 @@ while(1):
     res = requests.put(URI, data=json.dumps(payload), headers=headers)
 
 GPIO.cleanup()
+
+os.execv('/home/pi/test')
+
