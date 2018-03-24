@@ -1,0 +1,57 @@
+<script src="./node_modules/howler/dist/howler.min.js"></script>
+<script>
+    const position = {
+        x: 0,
+        y: 0,
+        z: 0,
+        distance: 1
+    }
+
+    const socket = new WebSocket('ws://127.0.0.1:8080')
+    // Connection opened
+    socket.addEventListener('open', function (event) {
+        socket.send('Hello Server!');
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        const sensors = JSON.parse(event.data)
+        position.x = sensors.right
+    });
+
+
+    var Sound = function () {
+        // Setup the shared Howl.
+        this.sound = new Howl({
+            src: ['./sonar.mp3'],
+            sprite: {
+                thunder: [0, 2000]
+            },
+            volume: 0
+        });
+
+        // Begin playing background sounds.
+        this.thunder();
+    };
+    Sound.prototype = {
+
+        /**
+         * Randomly play thunder sounds periodically.
+         */
+        thunder: function () {
+            setTimeout(function () {
+                // Play the thunder sound in a random position.
+                this._thunder = this.sound.play('thunder');
+                this.sound.pos(position.x, position.y, position.z, this._thunder);
+                this.sound.volume(position.distance, this._thunder);
+                this.sound.rate(1)
+
+                // Schedule the next clap.
+                this.thunder();
+            }.bind(this), 2000);
+        }
+    };
+    const sound = new Sound()
+    sound.thunder()
+</script>
