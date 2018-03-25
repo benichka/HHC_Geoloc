@@ -49,14 +49,17 @@ while(1):
 
     # print '-front'
     while GPIO.input(echo_front)==0:
-        start_impulse_front = time.time()
+        pass
+
+    start_impulse_front = time.time()
 
     # print '--front'
     while GPIO.input(echo_front)==1:
-        end_impulse_front = time.time()
-        if end_impulse_front > (400. / 17000) + start_impulse_front:
-            end_impulse_front = (400. / 17000) + start_impulse_front
-            break
+        pass
+
+    end_impulse_front = time.time()
+    if end_impulse_front > (400. / 17000) + start_impulse_front:
+        end_impulse_front = (400. / 17000) + start_impulse_front
 
     time.sleep(0.01)
     GPIO.output(trig_left, True)
@@ -65,14 +68,17 @@ while(1):
 
     # print '-left'
     while GPIO.input(echo_left)==0:
-        start_impulse_left = time.time()
+        pass
+
+    start_impulse_left = time.time()
 
     # print '--left'
     while GPIO.input(echo_left)==1:
-        end_impulse_left = time.time()
-        if end_impulse_left > (400. / 17000) + start_impulse_left:
-            end_impulse_left = (400. / 17000) + start_impulse_left
-            break
+        pass
+
+    end_impulse_left = time.time()
+    if end_impulse_left > (400. / 17000) + start_impulse_left:
+        end_impulse_left = (400. / 17000) + start_impulse_left
 
     time.sleep(0.01)
     GPIO.output(trig_right, True)
@@ -81,14 +87,17 @@ while(1):
 
     # print '-right'
     while GPIO.input(echo_right)==0:
-        start_impulse_right = time.time()
+        pass
+
+    start_impulse_right = time.time()
 
     # print '--right'
     while GPIO.input(echo_right)==1:
-        end_impulse_right = time.time()
-        if end_impulse_right > (400. / 17000) + start_impulse_right:
-            end_impulse_right = (400. / 17000) + start_impulse_right
-            break
+        pass
+    
+    end_impulse_right = time.time()
+    if end_impulse_right > (400. / 17000) + start_impulse_right:
+        end_impulse_right = (400. / 17000) + start_impulse_right
 
     # print 'end of while blocks'
     distance_front = round((end_impulse_front - start_impulse_front) * 340 * 100 / 2, 1)
@@ -130,7 +139,7 @@ while(1):
 
     headers = {'Content-Type': 'application/json' }
 
-    payload = {'left': dist_left, 'front': dist_front, 'right': dist_right}
+    payload = {'left': dist_right, 'front': dist_front, 'right': dist_left}
 
     if loop % 20 == 0:
         print payload
