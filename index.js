@@ -9,19 +9,22 @@ const wss = new WebSocket.Server({ server });
 
 let client = null
 wss.on('connection', function connection(ws, req) {
-    // You might use location.query.access_token to authenticate or share sessions
-    // or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
     client = ws
     ws.on('message', function incoming(message) {
         console.log('received: %s', message);
     });
-
-    
+    ws.on('close', () => {
+        client = null
+    })
 });
 
 app.put('/sensors', function (req, res) {
-    console.log(req.body)
-    if(client) client.send(JSON.stringify(req.body));
+    const sensors = req.body
+    if (client) client.send(
+        JSON.stringify([
+            sensors.left, sensors.front, sensors.right
+        ])
+    )
     res.sendStatus(200)
 })
 
