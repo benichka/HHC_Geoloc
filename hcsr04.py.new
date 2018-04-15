@@ -1,0 +1,153 @@
+#!/usr/bin/python
+
+import RPi.GPIO as GPIO
+import time
+import requests
+import json
+import os
+
+GPIO.cleanup()
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+frequency = 0.03
+
+trig_front = 27
+trig_left = 23
+trig_right = 24
+echo_front = 17
+echo_left = 22
+echo_right = 18 
+
+GPIO.setup(trig_front, GPIO.OUT)
+GPIO.setup(trig_left, GPIO.OUT)
+GPIO.setup(trig_right, GPIO.OUT)
+GPIO.setup(echo_front, GPIO.IN)
+GPIO.setup(echo_left, GPIO.IN)
+GPIO.setup(echo_right, GPIO.IN)
+
+URI = "http://172.20.10.2:8080/sensors"
+
+GPIO.output(trig_front, False)
+GPIO.output(trig_left, False)
+GPIO.output(trig_right, False)
+
+time.sleep(2)
+
+previous_front = [0, 0, 0, 0]
+previous_left = [0, 0, 0, 0]
+previous_right = [0, 0, 0, 0]
+
+loop = 0
+while(1):
+    time.sleep(frequency)
+
+    GPIO.output(trig_front, True)
+    time.sleep(0.00001)
+    GPIO.output(trig_front, False)
+
+    # print '-front'
+    while GPIO.input(echo_front)==0:
+        pass
+
+    start_impulse_front = time.time()
+
+    # print '--front'
+    while GPIO.input(echo_front)==1:
+        pass
+
+    end_impulse_front = time.time()
+    if end_impulse_front > (400. / 17000) + start_impulse_front:
+        end_impulse_front = (400. / 17000) + start_impulse_front
+
+    time.sleep(0.01)
+    GPIO.output(trig_left, True)
+    time.sleep(0.00001)
+    GPIO.output(trig_left, False)
+
+    # print '-left'
+    while GPIO.input(echo_left)==0:
+        pass
+
+    start_impulse_left = time.time()
+
+    # print '--left'
+    while GPIO.input(echo_left)==1:
+        pass
+
+    end_impulse_left = time.time()
+    if end_impulse_left > (400. / 17000) + start_impulse_left:
+        end_impulse_left = (400. / 17000) + start_impulse_left
+
+    time.sleep(0.01)
+    GPIO.output(trig_right, True)
+    time.sleep(0.00001)
+    GPIO.output(trig_right, False)
+
+    # print '-right'
+    while GPIO.input(echo_right)==0:
+        pass
+
+    start_impulse_right = time.time()
+
+    # print '--right'
+    while GPIO.input(echo_right)==1:
+        pass
+    
+    end_impulse_right = time.time()
+    if end_impulse_right > (400. / 17000) + start_impulse_right:
+        end_impulse_right = (400. / 17000) + start_impulse_right
+
+    # print 'end of while blocks'
+    distance_front = round((end_impulse_front - start_impulse_front) * 340 * 100 / 2, 1)
+
+    distance_left = round((end_impulse_left - start_impulse_left) * 340 * 100 / 2, 1)
+
+    distance_right = round((end_impulse_right - start_impulse_right) * 340 * 100 / 2, 1)
+
+    # print 'after distances'
+
+    previous_front = previous_front[1:] + previous_front[:1]
+    previous_left = previous_left[1:] + previous_left[:1] 
+    previous_right = previous_right[1:] + previous_right[:1]
+    previous_front[3] = distance_front
+    previous_right[3] = distance_right
+    previous_left[3] = distance_left
+
+    mf = 0
+    for i in previous_front:
+        mf += i
+
+    mf /= 4
+
+    mr = 0
+    for i in previous_right:
+        mr += i
+
+    mr /= 4
+
+    ml = 0
+    for i in previous_left:
+        ml += i
+
+    ml /= 4
+
+    dist_front = '{}'.format(mf)
+    dist_left = '{}'.format(ml)
+    dist_right = '{}'.format(mr)
+
+    headers = {'Content-Type': 'application/json' }
+
+    payload = {'left': dist_right, 'front': dist_front, 'right': dist_left}
+
+    if loop % 20 == 0:
+        print payload
+        loop = 0
+
+    loop += 1
+    res = requests.put(URI, data=json.dumps(payload), headers=headers)
+
+GPIO.cleanup()
+
+os.execv('/home/pi/test/hcsr04.py')
